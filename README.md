@@ -4,14 +4,24 @@ A .NET 9 ASP.NET Core web application deployed on AWS with a production-grade, h
 
 ---
 
-## 📺 Demo
+## 📺 App in Action
 
-<!-- Replace with your actual YouTube/Google Drive video link -->
-[![Watch Demo](https://img.shields.io/badge/Watch-Demo%20Video-red?style=for-the-badge&logo=youtube)](https://your-video-link-here)
+<!-- 
+  HOW TO ADD YOUR GIF:
+  1. Record screen with OBS
+  2. Go to ezgif.com → Video to GIF → upload your recording → convert → download
+  3. Save the file as app-demo.gif inside the videos/ folder
+  4. Push to GitHub — it will play automatically in the README
+-->
+
+![App Demo](videos/app-demo.gif)
 
 ---
 
 ## 🏗️ Architecture
+
+<!-- Save your draw.io diagram as architecture-diagram.png inside screenshots/ folder -->
+![Architecture Diagram](screenshots/architecture-diagram.png)
 
 ```
 Internet
@@ -28,9 +38,6 @@ IAM Role (least-privilege)
 ├── AWS Comprehend   → Language Detection
 └── S3               → App Artifact Storage
 ```
-
-<!-- Replace with your architecture diagram image -->
-![Architecture Diagram](screenshots/architecture-diagram.png)
 
 ---
 
@@ -49,86 +56,126 @@ IAM Role (least-privilege)
 
 ---
 
-## ✨ Key Features
+## ✨ Features
 
 - **High Availability** — Deployed across 2 AZs, no single point of failure
 - **Self-Healing** — ASG automatically replaces unhealthy instances based on ELB health checks
 - **Auto Scaling** — Scales out when CPU exceeds 50%, scales in when load drops
-- **Secure** — IAM role-based authentication, no hardcoded AWS credentials, least-privilege access
-- **Automated Deployment** — App pulled from S3 and started automatically via EC2 User Data on every instance launch
+- **Secure** — IAM role-based authentication, no hardcoded credentials, least-privilege access
+- **Automated Deployment** — App pulled from S3 and started via EC2 User Data on every instance launch
 
 ---
 
-## 📸 Screenshots
+## 📸 Infrastructure Screenshots
 
-### App Running via ALB DNS
-<!-- Replace with your screenshot -->
-![App via ALB](screenshots/app-running-alb.png)
+### Load Balancer — Active
+<!-- Save as screenshots/alb-active.png -->
+![ALB Active](screenshots/alb-active.png)
 
-### Both Instances Healthy in Target Group
-<!-- Replace with your screenshot -->
+### Target Group — Both Instances Healthy
+<!-- Save as screenshots/target-group-healthy.png -->
 ![Healthy Instances](screenshots/target-group-healthy.png)
 
 ### Auto Scaling Group — 2 Instances InService
-<!-- Replace with your screenshot -->
+<!-- Save as screenshots/asg-instances.png -->
 ![ASG Instances](screenshots/asg-instances.png)
 
-### Load Balancer Active
-<!-- Replace with your screenshot -->
-![Load Balancer](screenshots/alb-active.png)
+### IAM Role — Least Privilege Policies
+<!-- Save as screenshots/iam-role.png -->
+![IAM Role](screenshots/iam-role.png)
 
-### App Running on EC2 (systemctl status)
-<!-- Replace with your screenshot -->
-![Systemctl Status](screenshots/systemctl-running.png)
-
-### S3 Bucket with App Artifact
-<!-- Replace with your screenshot -->
+### S3 Bucket — App Artifact
+<!-- Save as screenshots/s3-bucket.png -->
 ![S3 Bucket](screenshots/s3-bucket.png)
 
-### IAM Role with Least-Privilege Policies
-<!-- Replace with your screenshot -->
-![IAM Role](screenshots/iam-role.png)
+### App Running on EC2 — systemctl status
+<!-- Save as screenshots/systemctl-running.png -->
+![Systemctl Running](screenshots/systemctl-running.png)
+
+---
+
+## 🎬 Clip Walkthroughs
+
+### 1 — Self Healing in Action
+*Terminating an instance and watching ASG automatically replace it*
+
+<!-- 
+  HOW TO ADD:
+  1. Screen record yourself terminating an instance and ASG replacing it
+  2. Convert to GIF at ezgif.com
+  3. Save as videos/self-healing.gif
+-->
+![Self Healing](videos/self-healing.gif)
+
+---
+
+### 2 — Architecture Walkthrough
+*ALB → Target Group → ASG → IAM Role clicked through visually*
+
+<!-- 
+  HOW TO ADD:
+  1. Screen record clicking through each AWS service briefly
+  2. Convert to GIF at ezgif.com
+  3. Save as videos/architecture-walkthrough.gif
+-->
+![Architecture Walkthrough](videos/architecture-walkthrough.gif)
+
+---
+
+### 3 — User Data Script Explained
+*How EC2 automatically installs the runtime and deploys the app on launch*
+
+<!-- 
+  HOW TO ADD:
+  1. Screen record scrolling through the userdata.sh file with zoom-ins
+  2. Convert to GIF at ezgif.com
+  3. Save as videos/userdata-explained.gif
+-->
+![User Data Explained](videos/userdata-explained.gif)
 
 ---
 
 ## 🚀 Deployment
 
-See the full step-by-step deployment guide here → [deployment-guide.md](docs/deployment-guide.md)
+See the full step-by-step guide → [deployment-guide.md](docs/deployment-guide.md)
 
 ### Quick Summary
-1. Upload app zip to S3
-2. Create VPC with public subnets across 2 AZs
+1. Upload `app.zip` to S3
+2. Create VPC with 2 public subnets across 2 AZs — enable auto-assign public IPv4
 3. Create IAM role with Polly, Comprehend, S3 access
 4. Create Security Groups for ALB and EC2
 5. Create Launch Template with User Data script
 6. Create Target Group on port 5000
-7. Create Application Load Balancer
-8. Create Auto Scaling Group — instances register automatically
+7. Create Application Load Balancer on port 80
+8. Create Auto Scaling Group — instances register to TG automatically
+
+---
+
+## 🐛 Real Issues Encountered & Fixed
+
+These are actual problems hit during deployment — not a tutorial follow-along.
+
+| Problem | Root Cause | Fix |
+|---|---|---|
+| User Data script timing out | Public subnets had no auto-assign public IP | Enabled auto-assign public IPv4 on subnets |
+| S3 download 404 error | File name had spaces | Renamed to `app.zip` |
+| App failing with exit-code 150 | Wrong .NET package installed | Used `aspnetcore-runtime-9.0` not `dotnet-runtime-9.0` |
+| Dotnet binary not found | Different path on Amazon Linux 2023 | Used `/usr/lib64/dotnet/dotnet` instead of `/usr/bin/dotnet` |
+| Browser timeout on ALB URL | Browser auto-upgrading to HTTPS | Explicitly used `http://` in URL |
+| EC2 Instance Connect failing | No public IP assigned to instance | Enabled auto-assign public IPv4 on subnet |
 
 ---
 
 ## 🔑 Key Technical Decisions
 
 **Why public subnets instead of private + NAT Gateway?**
-For this learning project, public subnets with restricted security groups were used to avoid NAT Gateway costs. In production, EC2 instances would sit in private subnets behind a NAT Gateway.
+For this learning project, public subnets with restricted security groups were used to avoid NAT Gateway costs. In production, EC2 instances would sit in private subnets behind a NAT Gateway — that is the correct production architecture.
 
 **Why User Data instead of Elastic Beanstalk?**
-Elastic Beanstalk automates what we built manually — ALB, ASG, EC2, health checks. Building it from scratch demonstrates understanding of each component rather than treating it as a black box.
+Elastic Beanstalk automates exactly what was built here manually — ALB, ASG, EC2, health checks, deployment. Building it from scratch demonstrates understanding of each component individually rather than treating Beanstalk as a black box.
 
 **Why IAM Role instead of access keys?**
-IAM roles follow AWS security best practices. Credentials are temporary, automatically rotated, and never stored on the instance. No risk of accidentally exposing keys in code or config files.
-
----
-
-## 🐛 Issues Encountered & Solved
-
-Real debugging experience from this deployment:
-
-- **Wrong .NET runtime** — `dotnet-runtime-9.0` doesn't include ASP.NET Core. Fixed by installing `aspnetcore-runtime-9.0`
-- **Dotnet binary path** — On Amazon Linux 2023, dotnet is at `/usr/lib64/dotnet/dotnet` not `/usr/bin/dotnet`
-- **No internet on instances** — Forgot to enable auto-assign public IPv4 on public subnets
-- **Browser HTTPS redirect** — ALB serves HTTP only, browser was auto-upgrading to HTTPS. Fixed by explicitly using `http://`
-- **Wrong S3 file name** — File had spaces in name, renamed to `app.zip` for clean deployment
+IAM roles follow AWS security best practices. Credentials are temporary, automatically rotated, and never stored on the instance — no risk of accidentally exposing keys in code or config files.
 
 ---
 
@@ -139,26 +186,28 @@ Real debugging experience from this deployment:
 ├── docs/
 │   └── deployment-guide.md
 ├── userdata/
-│   └── userdata.sh          ← EC2 User Data script (replace placeholders)
-└── screenshots/
-    ├── architecture-diagram.png
-    ├── app-running-alb.png
-    ├── target-group-healthy.png
-    ├── asg-instances.png
-    ├── alb-active.png
-    ├── systemctl-running.png
-    ├── s3-bucket.png
-    └── iam-role.png
+│   └── userdata.sh
+├── screenshots/
+│   ├── architecture-diagram.png
+│   ├── alb-active.png
+│   ├── target-group-healthy.png
+│   ├── asg-instances.png
+│   ├── iam-role.png
+│   ├── s3-bucket.png
+│   └── systemctl-running.png
+└── videos/
+    ├── app-demo.gif
+    ├── self-healing.gif
+    ├── architecture-walkthrough.gif
+    └── userdata-explained.gif
 ```
 
 ---
 
-## 🧑‍💻 Author
+## 🧑‍💻 About
 
 **Uttkarsh**
-- AWS Solutions Architect Associate (In Progress)
-- CSE Student | Cloud & Infrastructure Enthusiast
-- Japanese Language Learner (JLPT N5)
+AWS Solutions Architect Associate (In Progress) · CSE Student · Cloud & Infrastructure Enthusiast
 
 ---
 
