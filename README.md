@@ -229,5 +229,5 @@ AWS Solutions Architect Associate (In Progress) · CSE Student · Cloud \& Infra
 
 ## &#x20;License
 
-This project is open source and available under the MIT License.
+This project is open source and available under the [MIT License](LICENSE).
 
